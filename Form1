@@ -1,0 +1,196 @@
+Imports System.Web
+
+Public Class Form1
+    Dim rnd As New Random
+    Dim imageIndex As Integer = 1
+    Dim teRadenWoord As String
+    Dim woordLeesbaar As String
+    Dim Spelen As Boolean
+    Private geradenLetters As New List(Of Char)
+    Dim teller As Integer
+
+
+    Private Sub NieuwToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles NieuwToolStripMenuItem.Click
+        'in de menu heb je gekozen voor een nieuw spel
+        geradenLetters.Clear()
+        Spelen = True
+        imageIndex = 1
+        GalgBeeld()
+        Call ResetLetterLabelsColor()
+        Call Woordselectie()
+        Call RaadHetWoord()
+        Call AddHandlersToLetterLabels()
+    End Sub
+
+    Private Sub OpgaveToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles OpgaveToolStripMenuItem.Click
+        'in de menu heb je gekozen om op te geven
+        If Spelen = True Then
+            Call ResetLetterLabelsColor()
+            Call RemoveHandlersFromLetterLabels()
+            imageIndex = 11
+            GalgBeeld()
+
+            MessageBox.Show("Helaas, je geeft het op. Het woord was: " & woordLeesbaar, "Verloren")
+            Spelen = False
+        End If
+    End Sub
+
+    Private Sub GalgBeeld()
+        If imageIndex <= 11 Then
+            ' Laad de volgende afbeelding vanuit de resources
+            Dim imageName As String = "galg" & imageIndex.ToString("00") ' Zorgt voor de juiste nul-padding
+            Dim image As Image = My.Resources.ResourceManager.GetObject(imageName)
+
+            ' Toon de afbeelding en tel er dan ene bij
+            pbAfbeelding.Image = image
+            imageIndex += 1
+        Else
+            ' Reset de index als we aan het einde van de reeks afbeeldingen zijn
+            imageIndex = 1
+        End If
+    End Sub
+
+    Private Sub Woordselectie()
+        Dim woord As String() = My.Resources.woordenlijst.Split({Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
+
+        Dim randomWordIndex As Integer = rnd.Next(0, woord.Length)
+        Dim randomWord As String = UCase(woord(randomWordIndex))
+        Dim hetWoord As New HetWoord(randomWord)
+        ' Initialiseer de geraden woord met "_" tekens
+        teRadenWoord = New String("_"c, randomWord.Length)
+        woordLeesbaar = randomWord
+        teller = woordLeesbaar.Length
+
+    End Sub
+
+    Private Sub RaadHetWoord()
+        ' Verwijder alle bestaande labels die beginnen met "l"
+        Dim labelsToRemove As New List(Of Control)
+        For Each ctrl As Control In Me.Controls
+            If TypeOf ctrl Is Label AndAlso ctrl.Name.StartsWith("k") Then
+                labelsToRemove.Add(ctrl)
+            End If
+        Next
+
+        For Each lblToRemove As Control In labelsToRemove
+            Me.Controls.Remove(lblToRemove)
+        Next
+
+        ' Maak labels aan voor elk te raden teken
+        Dim labelWidth As Integer = 45
+        Dim labelHeight As Integer = 60
+        Dim leftPosition As Integer = 10
+        For i As Integer = 0 To woordLeesbaar.Length - 1
+            Dim lbl As New Label()
+            lbl.Name = "k" & (i + 1) ' Geef labels namen zoals "k1", "k2", etc.
+            lbl.Text = teRadenWoord(i)
+            lbl.Size = New Size(labelWidth, labelHeight)
+            lbl.Location = New Point(leftPosition + (i * (labelWidth + 5)), 100)
+            lbl.TextAlign = ContentAlignment.MiddleCenter
+            lbl.Font = New Font("Consolas", 16, FontStyle.Bold)
+            lbl.BorderStyle = BorderStyle.FixedSingle
+            Me.Controls.Add(lbl)
+        Next
+    End Sub
+
+    Private Sub InfoToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles InfoToolStripMenuItem.Click
+        GillesInfo.ShowDialog()
+    End Sub
+
+    Private Sub ResetLetterLabelsColor()
+        For Each ctrl As Control In Me.Controls
+            If TypeOf ctrl Is Label AndAlso ctrl.Name.StartsWith("lb") Then
+                ' Reset de achtergrondkleur van de letterlabels naar grijs
+                ctrl.BackColor = Color.LightGray
+            End If
+        Next
+    End Sub
+
+    Private Sub lb_MouseEnter(sender As Object, e As EventArgs)
+        ' Verander de achtergrondkleur van de label wanneer de muis erover beweegt
+        Dim letterLabel As Label = CType(sender, Label)
+        letterLabel.BackColor = Color.LightBlue
+    End Sub
+
+    Private Sub lb_MouseLeave(sender As Object, e As EventArgs)
+        ' Verander de achtergrondkleur van de label terug naar de oorspronkelijke kleur wanneer de muis de label verlaat
+        Dim letterLabel As Label = CType(sender, Label)
+        letterLabel.BackColor = Color.LightGray
+    End Sub
+
+    Private Sub AddHandlersToLetterLabels()
+        For Each ctrl As Control In Me.Controls
+            If TypeOf ctrl Is Label AndAlso ctrl.Name.StartsWith("lb") Then
+                Dim letterLabel As Label = CType(ctrl, Label)
+
+                ' Voeg de MouseEnter en MouseLeave handlers toe aan de label
+                AddHandler letterLabel.MouseEnter, AddressOf lb_MouseEnter
+                AddHandler letterLabel.MouseLeave, AddressOf lb_MouseLeave
+            End If
+        Next
+    End Sub
+
+    Private Sub RemoveHandlersFromLetterLabels()
+        For Each ctrl As Control In Me.Controls
+            If TypeOf ctrl Is Label AndAlso ctrl.Name.StartsWith("lb") Then
+                Dim letterLabel As Label = CType(ctrl, Label)
+
+                ' Verwijder de MouseEnter en MouseLeave handlers van de label
+                RemoveHandler letterLabel.MouseEnter, AddressOf lb_MouseEnter
+                RemoveHandler letterLabel.MouseLeave, AddressOf lb_MouseLeave
+            End If
+        Next
+    End Sub
+
+    Private Sub LetterGekozen(sender As Object, e As EventArgs) Handles lbA.Click, lbB.Click, lbC.Click, lbD.Click, lbE.Click, lbF.Click, lbG.Click, lbH.Click, lbI.Click, lbJ.Click, lbK.Click, lbL.Click, lbM.Click, lbN.Click, lbO.Click, lbP.Click, lbQ.Click, lbR.Click, lbS.Click, lbT.Click, lbU.Click, lbV.Click, lbW.Click, lbX.Click, lbY.Click, lbZ.Click
+        Dim gekozenLetter As Char = DirectCast(sender, Label).Text(0)
+        If Spelen = True Then
+
+            ' Controleer of de letter al eerder is gekozen
+            If geradenLetters.Contains(gekozenLetter) Then
+                ' Doe niets als de letter al eerder is gekozen
+                Return
+            End If
+
+            ' Voeg de gekozen letter toe aan de lijst met geraden letters
+            geradenLetters.Add(gekozenLetter)
+
+            ' Controleer of de letter overeenkomt met een letter in het te raden woord
+            If woordLeesbaar.Contains(gekozenLetter) Then
+                ' Markeer de overeenkomende labels als groen en maak het juiste letter zichtbaar
+                For i As Integer = 0 To woordLeesbaar.Length - 1
+                    If woordLeesbaar(i) = gekozenLetter Then
+                        Me.Controls("k" & (i + 1)).Text = gekozenLetter
+                        Me.Controls("k" & (i + 1)).BackColor = Color.LightGreen
+                        RemoveHandler(Me.Controls("lb" & gekozenLetter)).MouseEnter, AddressOf lb_MouseEnter
+                        RemoveHandler(Me.Controls("lb" & gekozenLetter)).MouseLeave, AddressOf lb_MouseLeave
+                        Me.Controls("lb" & gekozenLetter).BackColor = Color.LightGreen
+
+                        teller -= 1
+                    End If
+                Next
+            Else
+                ' Als de letter niet overeenkomt, markeer de label als zwart en verhoog het aantal fouten
+                RemoveHandler(Me.Controls("lb" & gekozenLetter)).MouseEnter, AddressOf lb_MouseEnter
+                RemoveHandler(Me.Controls("lb" & gekozenLetter)).MouseLeave, AddressOf lb_MouseLeave
+                Me.Controls("lb" & gekozenLetter).BackColor = Color.DarkGray
+                GalgBeeld()
+            End If
+
+            ' Controleer of het spel is gewonnen of verloren
+            If teller = 0 Then
+                MessageBox.Show("Gefeliciteerd! Je hebt het woord geraden.", "Gewonnen")
+                Call ResetLetterLabelsColor()
+                Call RemoveHandlersFromLetterLabels()
+                Call ResetLetterLabelsColor()
+                Spelen = False
+                Return
+            ElseIf imageIndex >= 12 Then
+                MessageBox.Show("Helaas, je hebt het woord niet geraden. Het woord was: " & woordLeesbaar, "Verloren")
+                Call ResetLetterLabelsColor()
+                Call RemoveHandlersFromLetterLabels()
+                Spelen = False
+            End If
+        End If
+    End Sub
+End Class
